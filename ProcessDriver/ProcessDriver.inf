@@ -1,0 +1,77 @@
+;
+; ProcessDriver.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=System ; TODO: specify appropriate Class
+ClassGuid={4d36e97d-e325-11ce-bfc1-08002be10318} ; TODO: specify appropriate ClassGuid
+Provider=%ManufacturerName%
+CatalogFile=ProcessDriver.cat
+DriverVer= ; TODO: set DriverVer in stampinf property pages
+PnpLockdown=1
+
+[DestinationDirs]
+DefaultDestDir = 12
+ProcessDriver_Device_CoInstaller_CopyFiles = 11
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+ProcessDriver.sys  = 1,,
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with SourceDisksNames
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%ProcessDriver.DeviceDesc%=ProcessDriver_Device, Root\ProcessDriver ; TODO: edit hw-id
+
+[ProcessDriver_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+ProcessDriver.sys
+
+;-------------- Service installation
+[ProcessDriver_Device.NT.Services]
+AddService = ProcessDriver,%SPSVCINST_ASSOCSERVICE%, ProcessDriver_Service_Inst
+
+; -------------- ProcessDriver driver install sections
+[ProcessDriver_Service_Inst]
+DisplayName    = %ProcessDriver.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\ProcessDriver.sys
+
+;
+;--- ProcessDriver_Device Coinstaller installation ------
+;
+
+[ProcessDriver_Device.NT.CoInstallers]
+AddReg=ProcessDriver_Device_CoInstaller_AddReg
+CopyFiles=ProcessDriver_Device_CoInstaller_CopyFiles
+
+[ProcessDriver_Device_CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+
+[ProcessDriver_Device_CoInstaller_CopyFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+
+[ProcessDriver_Device.NT.Wdf]
+KmdfService =  ProcessDriver, ProcessDriver_wdfsect
+[ProcessDriver_wdfsect]
+KmdfLibraryVersion = $KMDFVERSION$
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="<Your manufacturer name>" ;TODO: Replace with your manufacturer name
+DiskName = "ProcessDriver Installation Disk"
+ProcessDriver.DeviceDesc = "ProcessDriver Device"
+ProcessDriver.SVCDESC = "ProcessDriver Service"

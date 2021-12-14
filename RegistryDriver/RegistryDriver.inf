@@ -1,0 +1,77 @@
+;
+; RegistryDriver.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=System ; TODO: specify appropriate Class
+ClassGuid={4d36e97d-e325-11ce-bfc1-08002be10318} ; TODO: specify appropriate ClassGuid
+Provider=%ManufacturerName%
+CatalogFile=RegistryDriver.cat
+DriverVer= ; TODO: set DriverVer in stampinf property pages
+PnpLockdown=1
+
+[DestinationDirs]
+DefaultDestDir = 12
+RegistryDriver_Device_CoInstaller_CopyFiles = 11
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+RegistryDriver.sys  = 1,,
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with SourceDisksNames
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%RegistryDriver.DeviceDesc%=RegistryDriver_Device, Root\RegistryDriver ; TODO: edit hw-id
+
+[RegistryDriver_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+RegistryDriver.sys
+
+;-------------- Service installation
+[RegistryDriver_Device.NT.Services]
+AddService = RegistryDriver,%SPSVCINST_ASSOCSERVICE%, RegistryDriver_Service_Inst
+
+; -------------- RegistryDriver driver install sections
+[RegistryDriver_Service_Inst]
+DisplayName    = %RegistryDriver.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\RegistryDriver.sys
+
+;
+;--- RegistryDriver_Device Coinstaller installation ------
+;
+
+[RegistryDriver_Device.NT.CoInstallers]
+AddReg=RegistryDriver_Device_CoInstaller_AddReg
+CopyFiles=RegistryDriver_Device_CoInstaller_CopyFiles
+
+[RegistryDriver_Device_CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+
+[RegistryDriver_Device_CoInstaller_CopyFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+
+[RegistryDriver_Device.NT.Wdf]
+KmdfService =  RegistryDriver, RegistryDriver_wdfsect
+[RegistryDriver_wdfsect]
+KmdfLibraryVersion = $KMDFVERSION$
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="<Your manufacturer name>" ;TODO: Replace with your manufacturer name
+DiskName = "RegistryDriver Installation Disk"
+RegistryDriver.DeviceDesc = "RegistryDriver Device"
+RegistryDriver.SVCDESC = "RegistryDriver Service"
